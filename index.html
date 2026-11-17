@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>이마트 월간 신선 품질 개선 리포트 · 이번 달, 이렇게 바꿨어요</title>
+  <!-- Pretendard Font -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+          },
+          colors: {
+            emartGreen: '#4B7A3B',
+            emartGreenLight: '#EEF4EC',
+            emartYellow: '#FFB81C',
+            emartYellowLight: '#FFF8E6',
+            emartCharcoal: '#222222',
+            emartGray: '#9CA3AF',
+          },
+          borderRadius: {
+            card: '16px',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #222222;
+      background-color: #F3F4F6;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* 말풍선 스티커 꼬리 */
+    .sticker-bubble {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: #FFFDF7;
+      border: 1.5px solid #FFB81C;
+      border-bottom-width: 4px;
+      border-radius: 9999px;
+      padding: 6px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      color: #222222;
+      box-shadow: 0 2px 6px rgba(255, 184, 28, 0.15);
+    }
+    /* 고객 불편 말풍선 꼬리 */
+    .quote-bubble {
+      position: relative;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+    }
+    .quote-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 24px;
+      width: 14px;
+      height: 14px;
+      background: #F8FAFC;
+      border-right: 1px solid #E2E8F0;
+      border-bottom: 1px solid #E2E8F0;
+      transform: rotate(45deg);
+    }
+    /* 부드러운 페이드 전환 */
+    .fade-in {
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* 스크롤바 숨김 (필터 칩 영역) */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-[#222222] selection:bg-[#FFB81C]/30">
+
+  <!-- 모바일 프레임 컨테이너 (최대 430px, PC 중앙 정렬) -->
+  <div id="app-shell" class="max-w-[430px] mx-auto min-h-screen bg-white shadow-xl flex flex-col relative">
+    
+    <!-- 상단 시안 안내 회색 띠 (모든 화면 공통) -->
+    <div class="bg-gray-200 text-gray-600 text-[11px] font-medium text-center py-1.5 px-3 tracking-tight border-b border-gray-300/60">
+      FNDA 이마트 개인과제 · 콘셉트 시안
+    </div>
+
+    <!-- 동적 화면 렌더링 영역 -->
+    <div id="app-root" class="flex-1 flex flex-col"></div>
+
+    <!-- 토스트 / 안내 메시지 박스 (alert() 대체) -->
+    <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-32px)] max-w-[398px] z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+  </div>
+
+  <script>
+    /**
+     * 1. 데이터 정의: 이번 달 개선 품목 (시금치, 감귤, 고등어) 및 리포트 메타데이터
+     */
+    const STAGES = ['입고', '보관', '포장', '배송'];
+
+    const ITEMS_DATA = {
+      spinach: {
+        id: 'spinach',
+        emoji: '🥬',
+        name: '시금치',
+        completedDate: '2026년 11월 개선 완료',
+        stage: '포장',
+        complaint: '배송 중 눌려서 잎이 물렀어요',
+        source: 'SSG닷컴 주문 고객 · 10월 고객센터 문의',
+        beforeText: '눕혀 담아서 아래쪽 잎이 눌렸어요',
+        afterText: '세워 담고 완충 트레이로 고정했어요',
+        changes: [
+          '눕힘 포장 → 세움 포장',
+          '완충 트레이 추가'
+        ],
+        collaborators: '이마트 상품관리팀 · 포장재 협력사',
+        resultMetric: '교환 문의 30% ↓',
+        resultNote: '목표',
+        beforeSvg: `
+          <svg viewBox="0 0 140 90" class="w-full h-24 mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="14" y="54" width="112" height="24" rx="6" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1.5"/>
+            <!-- 눕혀져 눌린 시금치 -->
+            <ellipse cx="52" cy="66" rx="26" ry="6" fill="#9CA3AF"/>
+            <ellipse cx="88" cy="67" rx="24" ry="5" fill="#6B7280"/>
+            <!-- 위에서 누르는 무거운 상품 -->
+            <rect x="30" y="18" width="80" height="30" rx="6" fill="#D1D5DB" stroke="#6B7280" stroke-width="1.5"/>
+            <text x="70" y="37" text-anchor="middle" fill="#4B5563" font-size="10" font-weight="700">다른 상품 하중</text>
+            <!-- 압력 화살표 -->
+            <path d="M46 49V56M46 56L42 52M46 56L50 52" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M94 49V56M94 56L90 52M94 56L98 52" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `,
+        afterSvg: `
+          <svg viewBox="0 0 140 90" class="w-full h-24 mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- 완충 트레이 -->
+            <path d="M24 44H116L108 78H32L24 44Z" fill="#DCEAD7" stroke="#4B7A3B" stroke-width="1.8" stroke-linejoin="round"/>
+            <line x1="54" y1="44" x2="56" y2="78" stroke="#4B7A3B" stroke-width="1.2" stroke-dasharray="3 2"/>
+            <line x1="86" y1="44" x2="84" y2="78" stroke="#4B7A3B" stroke-width="1.2" stroke-dasharray="3 2"/>
+            <!-- 세워 담긴 싱싱한 시금치 잎 -->
+            <path d="M40 44C35 28 42 18 46 28C50 18 55 29 48 44" fill="#4B7A3B"/>
+            <path d="M70 44C64 25 71 15 75 26C80 16 85 27 77 44" fill="#5D9449"/>
+            <path d="M98 44C93 28 99 19 103 28C107 19 112 29 105 44" fill="#4B7A3B"/>
+            <!-- 체크 배지 -->
+            <circle cx="114" cy="22" r="11" fill="#4B7A3B"/>
+            <path d="M109 22L112.5 25.5L119.5 18.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `
+      },
+      mandarin: {
+        id: 'mandarin',
+        emoji: '🍊',
+        name: '감귤',
+        completedDate: '2026년 11월 개선 완료',
+        stage: '입고',
+        complaint: '한 박스에 곰팡이 핀 귤이 섞여 있었어요',
+        source: '매장 구매 고객 · 10월 교환 접수',
+        beforeText: '입고 때 박스 윗줄만 확인했어요',
+        afterText: '아래층까지 확인하고 상처 난 귤을 골라내요',
+        changes: [
+          '박스 아래층까지 검품',
+          '상처 난 귤 선별 기준 추가'
+        ],
+        collaborators: '이마트 상품관리팀 · 산지 협력사',
+        resultMetric: '교환 문의 30% ↓',
+        resultNote: '목표',
+        beforeSvg: `
+          <svg viewBox="0 0 140 90" class="w-full h-24 mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="26" y="24" width="88" height="54" rx="6" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1.5"/>
+            <line x1="26" y1="51" x2="114" y2="51" stroke="#9CA3AF" stroke-width="1.2" stroke-dasharray="3 3"/>
+            <!-- 윗줄 귤 -->
+            <circle cx="46" cy="38" r="9" fill="#9CA3AF"/>
+            <circle cx="70" cy="38" r="9" fill="#9CA3AF"/>
+            <circle cx="94" cy="38" r="9" fill="#9CA3AF"/>
+            <!-- 아래층 미확인 곰팡이 귤 -->
+            <circle cx="46" cy="64" r="9" fill="#9CA3AF"/>
+            <circle cx="70" cy="64" r="9" fill="#6B7280" stroke="#EF4444" stroke-width="1.8"/>
+            <text x="70" y="68" text-anchor="middle" fill="white" font-size="11" font-weight="800">!</text>
+            <circle cx="94" cy="64" r="9" fill="#9CA3AF"/>
+            <text x="70" y="16" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="700">윗줄만 육안 확인</text>
+          </svg>
+        `,
+        afterSvg: `
+          <svg viewBox="0 0 140 90" class="w-full h-24 mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="26" y="24" width="88" height="54" rx="6" fill="#EEF4EC" stroke="#4B7A3B" stroke-width="1.8"/>
+            <line x1="26" y1="51" x2="114" y2="51" stroke="#4B7A3B" stroke-width="1.2"/>
+            <!-- 윗줄 & 아랫줄 모두 선별 완료 -->
+            <circle cx="46" cy="38" r="9" fill="#F59E0B"/>
+            <circle cx="70" cy="38" r="9" fill="#F59E0B"/>
+            <circle cx="94" cy="38" r="9" fill="#F59E0B"/>
+            <circle cx="46" cy="64" r="9" fill="#F59E0B"/>
+            <circle cx="70" cy="64" r="9" fill="#F59E0B"/>
+            <circle cx="94" cy="64" r="9" fill="#F59E0B"/>
+            <!-- 체크 배지 -->
+            <circle cx="114" cy="22" r="11" fill="#4B7A3B"/>
+            <path d="M109 22L112.5 25.5L119.5 18.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `
+      },
+      mackerel: {
+        id: 'mackerel',
+        emoji: '🐟',
+        name: '고등어',
+        completedDate: '2026년 11월 개선 완료',
+        stage: '보관',
+        complaint: '받았을 때 살이 물렀어요',
+        source: '바로퀵 주문 고객 · 10월 고객센터 문의',
+        beforeText: '진열 중 온도가 오르내렸어요',
+        afterText: '온도 점검을 늘리고 출고 직전 보랭팩을 넣어요',
+        changes: [
+          '진열 냉장 온도 점검 횟수 늘림',
+          '출고 직전 보랭팩 추가'
+        ],
+        collaborators: '이마트 수산 파트 · 물류 담당',
+        resultMetric: '교환 문의 30% ↓',
+        resultNote: '목표',
+        beforeSvg: `
+          <svg viewBox="0 0 140 90" class="w-full h-24 mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="20" width="100" height="56" rx="8" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1.5"/>
+            <!-- 오르내리는 온도 그래프 -->
+            <path d="M32 58L52 36L72 56L92 32L108 50" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="52" cy="36" r="3.5" fill="#EF4444"/>
+            <circle cx="92" cy="32" r="3.5" fill="#EF4444"/>
+            <text x="70" y="70" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="700">진열 온도 편차 발생</text>
+          </svg>
+        `,
+        afterSvg: `
+          <svg viewBox="0 0 140 90" class="w-full h-24 mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="20" width="100" height="56" rx="8" fill="#EEF4EC" stroke="#4B7A3B" stroke-width="1.8"/>
+            <!-- 보랭팩 + 안정 온도 -->
+            <rect x="34" y="34" width="38" height="28" rx="6" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+            <text x="53" y="51" text-anchor="middle" fill="#1D4ED8" font-size="10" font-weight="800">❄️ 보랭팩</text>
+            <path d="M80 48H108" stroke="#4B7A3B" stroke-width="3" stroke-linecap="round"/>
+            <text x="94" y="40" text-anchor="middle" fill="#4B7A3B" font-size="10" font-weight="800">정온 유지</text>
+            <!-- 체크 배지 -->
+            <circle cx="114" cy="22" r="11" fill="#4B7A3B"/>
+            <path d="M109 22L112.5 25.5L119.5 18.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `
+      }
+    };
+
+    const ITEM_LIST = [ITEMS_DATA.spinach, ITEMS_DATA.mandarin, ITEMS_DATA.mackerel];
+
+    /**
+     * 2. 앱 상태 관리 (필터, 알림 신청, 투표 상태)
+     */
+    const appState = {
+      selectedStageFilter: '전체',
+      alertSubscribed: false,
+      pollChoice: null,
+      customPollText: '',
+      showCustomInput: false,
+      ignoreQueryParam: false
+    };
+
+    /**
+     * 3. 유틸리티: 커스텀 안내 토스트 (alert() 절대 미사용)
+     */
+    function showToast(message, duration = 3200) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'bg-[#222222]/95 text-white text-[13px] font-medium px-4 py-3 rounded-2xl shadow-lg text-center leading-snug backdrop-blur-sm transition-all duration-300 opacity-0 translate-y-2';
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    /**
+     * 4. 유틸리티: 공유하기 (Web Share API -> 실패 시 클립보드 복사)
+     */
+    async function handleShareReport() {
+      const shareData = {
+        title: '이마트 월간 신선 품질 개선 리포트 〈이번 달, 이렇게 바꿨어요〉',
+        text: '2026년 11월호 · 이마트 신선 품질 개선 리포트를 확인해 보세요.',
+        url: window.location.href
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          return;
+        } catch (err) {
+          // 사용자가 취소한 경우 무시, 그 외 폴백 실행
+          if (err && err.name === 'AbortError') return;
+        }
+      }
+
+      // 클립보드 복사 폴백 (iFrame 호환 document.execCommand 사용)
+      try {
+        const tempInput = document.createElement('input');
+        tempInput.value = window.location.href;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        showToast('리포트 링크가 복사되었어요!');
+      } catch (e) {
+        showToast('링크 복사에 실패했어요. 주소창의 링크를 공유해 주세요.');
+      }
+    }
+
+    /**
+     * 5. 공통 컴포넌트: 4구간 막대 (입고 · 보관 · 포장 · 배송)
+     */
+    function renderStageBar(activeStage, compact = false) {
+      return `
+        <div class="grid grid-cols-4 gap-1.5 ${compact ? 'mt-2.5' : 'mt-3'}">
+          ${STAGES.map(stage => {
+            const isActive = stage === activeStage;
+            return `
+              <div class="flex flex-col items-center">
+                <div class="w-full ${compact ? 'h-2' : 'h-2.5'} rounded-full transition-colors ${isActive ? 'bg-[#4B7A3B]' : 'bg-gray-200'}"></div>
+                <span class="${compact ? 'text-[11px] mt-1' : 'text-[12px] mt-1.5'} ${isActive ? 'font-bold text-[#4B7A3B]' : 'font-medium text-gray-400'}">
+                  ${stage}
+                </span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    /**
+     * 6. 공통 컴포넌트: 하단 푸터 안내 문구
+     */
+    function renderFooter(extraBottomSpace = false) {
+      return `
+        <footer class="bg-gray-50 border-t border-gray-200/80 px-5 pt-5 ${extraBottomSpace ? 'pb-28' : 'pb-8'} mt-auto">
+          <p class="text-[11px] text-gray-500 leading-relaxed">
+            FNDA 이마트 개인과제 콘셉트 시안입니다. 화면 속 고객 문의·수치는 예시이며, 개선 효과는 목표값이에요. 실제 주문·알림 기능은 작동하지 않아요.
+          </p>
+        </footer>
+      `;
+    }
+
+    /**
+     * 7. 라우팅 파싱 & 내비게이션
+     */
+    function getCurrentRoute() {
+      const hash = window.location.hash.replace('#', '').trim().toLowerCase();
+      if (hash && ITEMS_DATA[hash]) {
+        return { view: 'detail', itemId: hash };
+      }
+
+      if (!appState.ignoreQueryParam) {
+        const params = new URLSearchParams(window.location.search);
+        const queryItem = (params.get('item') || '').trim().toLowerCase();
+        if (queryItem && ITEMS_DATA[queryItem]) {
+          return { view: 'detail', itemId: queryItem };
+        }
+      }
+
+      return { view: 'report' };
+    }
+
+    function navigateTo(routeHash) {
+      appState.ignoreQueryParam = true;
+      try {
+        if (routeHash) {
+          window.location.hash = routeHash;
+        } else if (window.location.hash) {
+          window.location.hash = '';
+        }
+      } catch (e) {
+        // 샌드박스 환경 예외 무시
+      }
+      renderApp();
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    /**
+     * 8. 화면 1: 품목 상세 화면 (QR 진입용 - 시금치 / 감귤 / 고등어)
+     */
+    function renderDetailView(itemId) {
+      const item = ITEMS_DATA[itemId];
+      const otherItems = ITEM_LIST.filter(i => i.id !== itemId);
+
+      return `
+        <div class="flex-1 flex flex-col fade-in">
+          <!-- ① 상단 바 (스크롤 고정 + 노란 선) -->
+          <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b-[3px] border-[#FFB81C] px-4 py-3 flex items-center justify-between">
+            <button type="button" onclick="navigateTo('')" class="flex items-center gap-1 text-[15px] font-bold text-[#222222] py-1 px-1.5 -ml-1.5 rounded-lg active:bg-gray-100 transition">
+              <span class="text-xl leading-none font-normal text-gray-600">‹</span>
+              <span>11월 리포트</span>
+            </button>
+            <span class="inline-flex items-center gap-1 bg-[#EEF4EC] text-[#4B7A3B] text-[12px] font-bold px-2.5 py-1 rounded-full">
+              <span>📍</span> 단골 점포
+            </span>
+          </header>
+
+          <!-- 본문 컨텐츠 -->
+          <main class="px-5 pt-6 pb-6 space-y-6">
+            
+            <!-- ② 상품 헤더 -->
+            <section>
+              <div class="sticker-bubble mb-3.5">
+                <span>🌱</span>
+                <span>이번 달, 이렇게 바꿨어요!</span>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-3xl shadow-sm shrink-0">
+                    ${item.emoji}
+                  </div>
+                  <div>
+                    <h1 class="text-[24px] font-extrabold tracking-tight text-[#222222] leading-tight">
+                      ${item.name}
+                    </h1>
+                    <p class="text-[13px] text-gray-500 font-medium mt-0.5">
+                      ${item.completedDate}
+                    </p>
+                  </div>
+                </div>
+                <span class="bg-[#4B7A3B] text-white text-[12px] font-bold px-3 py-1.5 rounded-full shrink-0 shadow-sm">
+                  개선 완료
+                </span>
+              </div>
+            </section>
+
+            <!-- ③ 어디서 문제가 생겼나요 (4구간 막대) -->
+            <section class="bg-white border border-gray-200/90 rounded-[16px] p-4 shadow-sm">
+              <div class="flex items-center justify-between">
+                <h2 class="text-[14px] font-bold text-[#222222]">어디서 문제가 생겼나요</h2>
+                <span class="text-[12px] font-bold text-[#4B7A3B] bg-[#EEF4EC] px-2.5 py-0.5 rounded-full">
+                  ${item.stage} 구간
+                </span>
+              </div>
+              ${renderStageBar(item.stage, false)}
+            </section>
+
+            <!-- ④ 고객님이 알려주신 불편 -->
+            <section>
+              <h2 class="text-[14px] font-bold text-[#222222] mb-2.5">고객님이 알려주신 불편</h2>
+              <div class="quote-bubble p-4">
+                <p class="text-[16px] font-bold text-[#222222] leading-snug">
+                  "${item.complaint}"
+                </p>
+              </div>
+              <p class="text-[12px] text-gray-500 font-medium mt-3 pl-1">
+                ${item.source}
+              </p>
+            </section>
+
+            <!-- ⑤ 이렇게 달라졌어요 (좌우 비교 카드) -->
+            <section>
+              <h2 class="text-[14px] font-bold text-[#222222] mb-2.5">이렇게 달라졌어요</h2>
+              <div class="grid grid-cols-2 gap-2.5">
+                <!-- 개선 전 (회색) -->
+                <div class="bg-gray-50 border border-gray-200 rounded-[16px] p-3 flex flex-col">
+                  <span class="self-start text-[11px] font-bold text-gray-500 bg-gray-200/80 px-2 py-0.5 rounded-md mb-2">
+                    개선 전
+                  </span>
+                  <div class="bg-white rounded-xl p-1.5 border border-gray-100 mb-2.5">
+                    ${item.beforeSvg}
+                  </div>
+                  <p class="text-[12.5px] text-gray-600 font-medium leading-snug break-keep">
+                    "${item.beforeText}"
+                  </p>
+                </div>
+
+                <!-- 개선 후 (초록) -->
+                <div class="bg-[#EEF4EC]/60 border-2 border-[#4B7A3B] rounded-[16px] p-3 flex flex-col">
+                  <span class="self-start text-[11px] font-bold text-white bg-[#4B7A3B] px-2 py-0.5 rounded-md mb-2">
+                    개선 후
+                  </span>
+                  <div class="bg-white rounded-xl p-1.5 border border-[#4B7A3B]/20 mb-2.5">
+                    ${item.afterSvg}
+                  </div>
+                  <p class="text-[12.5px] text-[#222222] font-bold leading-snug break-keep">
+                    "${item.afterText}"
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <!-- ⑥ 무엇을 바꿨나요 -->
+            <section class="bg-white border border-gray-200/90 rounded-[16px] p-4 shadow-sm space-y-3">
+              <h2 class="text-[14px] font-bold text-[#222222]">무엇을 바꿨나요</h2>
+              <ul class="space-y-2">
+                ${item.changes.map(change => `
+                  <li class="flex items-start gap-2 text-[14px] font-semibold text-[#222222]">
+                    <span class="text-[#4B7A3B] font-extrabold mt-0.5">✓</span>
+                    <span>${change}</span>
+                  </li>
+                `).join('')}
+              </ul>
+              <div class="bg-gray-100 rounded-xl px-3.5 py-2.5 text-[12px] font-semibold text-gray-700 flex items-center gap-1.5">
+                <span>🧑‍🌾</span>
+                <span>함께 고쳤어요 · ${item.collaborators}</span>
+              </div>
+            </section>
+
+            <!-- ⑦ 결과 (초록 박스) -->
+            <section class="bg-[#4B7A3B] text-white rounded-[16px] p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <p class="text-[12px] text-white/85 font-medium">개선 전 대비</p>
+                <p class="text-[22px] font-extrabold tracking-tight mt-0.5">
+                  ${item.resultMetric} <span class="text-[15px] font-semibold text-white/90">${item.resultNote}</span>
+                </p>
+              </div>
+              <div class="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center text-xl">
+                📉
+              </div>
+            </section>
+
+            <!-- ⑧ 이번 달 함께 바뀐 상품 -->
+            <section class="pt-1">
+              <h2 class="text-[14px] font-bold text-[#222222] mb-2.5">이번 달 함께 바뀐 상품</h2>
+              <div class="grid grid-cols-2 gap-2.5 mb-3">
+                ${otherItems.map(other => `
+                  <button onclick="navigateTo('${other.id}')" class="bg-white border border-gray-200 hover:border-[#4B7A3B] rounded-[16px] p-3.5 text-left transition active:scale-[0.98] shadow-sm">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="text-xl">${other.emoji}</span>
+                      <span class="text-[15px] font-bold text-[#222222]">${other.name}</span>
+                    </div>
+                    <p class="text-[12px] font-semibold text-[#4B7A3B]">
+                      ${other.stage} 구간 개선 →
+                    </p>
+                  </button>
+                `).join('')}
+              </div>
+
+              <!-- 노란 버튼: 11월 리포트 전체 보기 -->
+              <button type="button" onclick="navigateTo('')" class="w-full bg-[#FFB81C] hover:bg-[#f5ae12] text-[#222222] font-extrabold text-[15px] py-3.5 rounded-[16px] shadow-sm transition active:scale-[0.99]">
+                11월 리포트 전체 보기
+              </button>
+            </section>
+
+          </main>
+
+          <!-- ⑩ 푸터 (하단 고정 버튼 여백 확보) -->
+          ${renderFooter(true)}
+
+          <!-- ⑨ 하단 고정 버튼 (스크롤해도 화면 아래 계속 보임) -->
+          <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 z-40">
+            <button type="button" onclick="showToast('시안 화면이라 실제 주문은 되지 않아요. 실제 서비스에선 SSG닷컴 장바구니에 담겨요.')" class="w-full bg-[#4B7A3B] hover:bg-[#3f6831] text-white rounded-[16px] py-3 px-4 shadow-md transition active:scale-[0.99] flex flex-col items-center justify-center">
+              <span class="text-[15px] font-extrabold leading-tight">개선된 ${item.name} 다시 담기</span>
+              <span class="text-[11px] text-white/85 font-medium mt-0.5">단골 점포에서 2시간 배송</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * 9. 화면 2: 리포트 전체 화면
+     */
+    function renderReportView() {
+      const filters = ['전체', '입고', '보관', '포장', '배송'];
+      const filteredItems = appState.selectedStageFilter === '전체'
+        ? ITEM_LIST
+        : ITEM_LIST.filter(item => item.stage === appState.selectedStageFilter);
+
+      return `
+        <div class="flex-1 flex flex-col fade-in">
+          <!-- ① 상단 바 (고정) -->
+          <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-5 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[20px] font-black tracking-tight text-[#222222]">
+                <span class="text-[#FFB81C]">e</span>mart
+              </span>
+              <span class="text-[15px] font-bold text-[#222222]">신선 리포트</span>
+            </div>
+            <button onclick="handleShareReport()" aria-label="리포트 공유하기" class="p-2 -mr-2 rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-700 transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+            </button>
+          </header>
+
+          <main class="px-5 pt-6 pb-8 space-y-8">
+            
+            <!-- ② 히어로 -->
+            <section class="space-y-3">
+              <p class="text-[12.5px] font-bold text-gray-500">
+                2026년 11월호 · 이마트 신선식품
+              </p>
+              <div class="sticker-bubble">
+                <span>🌱</span>
+                <span>이번 달, 이렇게 바꿨어요!</span>
+              </div>
+              <h1 class="text-[25px] font-extrabold leading-[1.3] tracking-tight text-[#222222] pt-1">
+                고객님이 알려주신 불편,<br />
+                <span class="text-[#4B7A3B]">원인을 찾아 고쳤어요</span>
+              </h1>
+              <p class="text-[13.5px] text-gray-600 leading-relaxed break-keep">
+                매달 실제로 바꾼 신선 상품만 골라, 어디서 문제가 생겼고 무엇을 바꿨는지 알려드려요.
+              </p>
+
+              <!-- 요약 칩 3개 -->
+              <div class="flex flex-wrap gap-2 pt-1">
+                <span class="bg-[#EEF4EC] text-[#4B7A3B] text-[12px] font-bold px-3 py-1.5 rounded-full">
+                  개선 품목 3개
+                </span>
+                <span class="bg-gray-100 text-[#222222] text-[12px] font-bold px-3 py-1.5 rounded-full">
+                  원인 구간 3곳
+                </span>
+                <span class="bg-[#FFF8E6] text-[#9A6700] text-[12px] font-bold px-3 py-1.5 rounded-full">
+                  다음 달 예고 2개
+                </span>
+              </div>
+            </section>
+
+            <!-- ③ 이번 달 개선 상품 -->
+            <section>
+              <div class="mb-3">
+                <h2 class="text-[18px] font-extrabold text-[#222222]">이번 달 개선 상품</h2>
+                <p class="text-[12.5px] text-gray-500 mt-0.5">원인 구간을 눌러 골라 볼 수 있어요</p>
+              </div>
+
+              <!-- 필터 칩 -->
+              <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-3">
+                ${filters.map(filter => {
+                  const isSelected = appState.selectedStageFilter === filter;
+                  return `
+                    <button onclick="setStageFilter('${filter}')" class="px-3.5 py-1.5 rounded-full text-[13px] font-bold shrink-0 transition ${
+                      isSelected
+                        ? 'bg-[#222222] text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }">
+                      ${filter}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+
+              <!-- 필터 결과 카드 영역 -->
+              <div class="space-y-3.5">
+                ${filteredItems.length > 0 ? filteredItems.map(item => `
+                  <article onclick="navigateTo('${item.id}')" class="bg-white border border-gray-200 hover:border-[#4B7A3B] rounded-[16px] p-4 shadow-sm cursor-pointer transition active:scale-[0.99]">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2.5">
+                        <span class="text-2xl">${item.emoji}</span>
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <h3 class="text-[17px] font-extrabold text-[#222222]">${item.name}</h3>
+                            <span class="text-[12px] font-semibold text-gray-500">원인 구간 · ${item.stage}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span class="bg-[#EEF4EC] text-[#4B7A3B] text-[11.5px] font-bold px-2.5 py-1 rounded-full">
+                        개선 완료
+                      </span>
+                    </div>
+
+                    <!-- 4구간 막대 -->
+                    ${renderStageBar(item.stage, true)}
+
+                    <!-- 고객 불편 한 줄 -->
+                    <p class="mt-3 bg-gray-50 rounded-xl px-3.5 py-2.5 text-[13.5px] font-semibold text-[#222222]">
+                      "${item.complaint}"
+                    </p>
+
+                    <!-- 하단 요약 & 자세히 보기 -->
+                    <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-[13px]">
+                      <span class="font-bold text-[#4B7A3B]">
+                        ${item.resultMetric} <span class="font-medium text-gray-500">(${item.resultNote})</span>
+                      </span>
+                      <span class="font-bold text-[#222222] flex items-center gap-0.5">
+                        자세히 보기 <span class="text-gray-400">→</span>
+                      </span>
+                    </div>
+                  </article>
+                `).join('') : `
+                  <!-- '배송' 선택 시 빈 상태 안내 -->
+                  <div class="bg-gray-50 border border-dashed border-gray-300 rounded-[16px] p-6 text-center space-y-3">
+                    <p class="text-[14px] font-bold text-gray-700">
+                      이번 달 배송 구간 개선 상품은 없어요
+                    </p>
+                    <button onclick="scrollToNextMonth()" class="inline-flex items-center gap-1 bg-white border border-gray-300 text-[#222222] text-[13px] font-bold px-4 py-2 rounded-full shadow-sm hover:bg-gray-50 transition">
+                      다음 달 예고 보기 <span>→</span>
+                    </button>
+                  </div>
+                `}
+              </div>
+            </section>
+
+            <!-- ④ 이렇게 고쳐요 (매달 같은 순서로 반복해요) -->
+            <section class="bg-gray-50 rounded-[16px] p-4 border border-gray-200/80">
+              <h2 class="text-[16px] font-extrabold text-[#222222]">이렇게 고쳐요</h2>
+              <p class="text-[12px] text-gray-500 mt-0.5 mb-3.5">매달 같은 순서로 반복해요</p>
+
+              <div class="grid grid-cols-4 gap-1.5">
+                <div class="bg-white border border-gray-200 rounded-xl p-2.5 text-center">
+                  <span class="text-[11px] font-bold text-gray-400 block">1주</span>
+                  <span class="text-lg my-1 block">💬</span>
+                  <span class="text-[11.5px] font-bold text-[#222222] leading-tight block break-keep">불편 모으기</span>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-2.5 text-center">
+                  <span class="text-[11px] font-bold text-gray-400 block">2주</span>
+                  <span class="text-lg my-1 block">🔍</span>
+                  <span class="text-[11.5px] font-bold text-[#222222] leading-tight block break-keep">원인 찾기</span>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-2.5 text-center">
+                  <span class="text-[11px] font-bold text-gray-400 block">3주</span>
+                  <span class="text-lg my-1 block">🛠️</span>
+                  <span class="text-[11.5px] font-bold text-[#222222] leading-tight block break-keep">직접 고치기</span>
+                </div>
+                <!-- 4주 초록 강조 -->
+                <div class="bg-[#4B7A3B] text-white rounded-xl p-2.5 text-center shadow-sm">
+                  <span class="text-[11px] font-bold text-white/80 block">4주</span>
+                  <span class="text-lg my-1 block">📣</span>
+                  <span class="text-[11.5px] font-extrabold leading-tight block break-keep">알려드리기</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- ⑤ 다음 달 예고 -->
+            <section id="next-month-section" class="scroll-mt-16">
+              <div class="mb-3">
+                <h2 class="text-[18px] font-extrabold text-[#222222]">다음 달 예고</h2>
+                <p class="text-[12.5px] text-gray-500 mt-0.5">12월호에서 공개할, 지금 고치고 있는 상품이에요</p>
+              </div>
+
+              <div class="space-y-2.5 mb-3.5">
+                <!-- 흐리게 처리한 예고 카드 1: 굴 -->
+                <div class="bg-gray-50/90 border border-gray-200/90 rounded-[16px] p-4 opacity-80">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xl">🦪</span>
+                      <span class="text-[15px] font-bold text-gray-700">굴</span>
+                      <span class="text-[11.5px] font-semibold bg-gray-200/80 text-gray-600 px-2 py-0.5 rounded-md">배송 구간</span>
+                    </div>
+                    <span class="text-[11.5px] font-bold text-[#4B7A3B]">보랭재 개선 중</span>
+                  </div>
+                  <p class="text-[13px] text-gray-500 font-medium">
+                    "받았을 때 미지근했어요"
+                  </p>
+                </div>
+
+                <!-- 흐리게 처리한 예고 카드 2: 딸기 -->
+                <div class="bg-gray-50/90 border border-gray-200/90 rounded-[16px] p-4 opacity-80">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xl">🍓</span>
+                      <span class="text-[15px] font-bold text-gray-700">딸기</span>
+                      <span class="text-[11.5px] font-semibold bg-gray-200/80 text-gray-600 px-2 py-0.5 rounded-md">포장 구간</span>
+                    </div>
+                    <span class="text-[11.5px] font-bold text-[#4B7A3B]">1단 트레이 검토 중</span>
+                  </div>
+                  <p class="text-[13px] text-gray-500 font-medium">
+                    "아래쪽이 눌려 있었어요"
+                  </p>
+                </div>
+              </div>
+
+              <!-- 12월호 알림 받기 버튼 -->
+              <button onclick="toggleAlertSubscribe()" class="w-full py-3.5 px-4 rounded-[16px] text-[14px] font-bold transition flex items-center justify-center gap-1.5 ${
+                appState.alertSubscribed
+                  ? 'bg-[#EEF4EC] text-[#4B7A3B] border border-[#4B7A3B]/40'
+                  : 'bg-white border-2 border-[#222222] text-[#222222] hover:bg-gray-50'
+              }">
+                ${appState.alertSubscribed
+                  ? '✓ 알림 신청 완료'
+                  : '🔔 12월호 나오면 알림 받기'}
+              </button>
+            </section>
+
+            <!-- ⑥ 다음에 고쳐줬으면 하는 상품은? (고객 투표) -->
+            <section class="bg-white border border-gray-200 rounded-[16px] p-4 shadow-sm">
+              <h2 class="text-[16px] font-extrabold text-[#222222]">다음에 고쳐줬으면 하는 상품은?</h2>
+              <p class="text-[12px] text-gray-500 mt-0.5 mb-3.5">
+                고객님의 선택이 다음 달 '불편 모으기'에 들어가요
+              </p>
+
+              ${!appState.pollChoice ? `
+                <div class="grid grid-cols-2 gap-2">
+                  ${['대파', '계란', '바나나'].map(option => `
+                    <button onclick="submitPoll('${option}')" class="py-3 px-3 rounded-xl border border-gray-200 hover:border-[#4B7A3B] hover:bg-[#EEF4EC]/40 text-[14px] font-bold text-[#222222] transition active:scale-[0.98]">
+                      ${option}
+                    </button>
+                  `).join('')}
+                  <button onclick="toggleCustomPollInput()" class="py-3 px-3 rounded-xl border border-dashed border-gray-300 hover:border-[#222222] text-[13.5px] font-bold text-gray-600 transition active:scale-[0.98]">
+                    ✏️ 직접 알려주기
+                  </button>
+                </div>
+
+                ${appState.showCustomInput ? `
+                  <div class="mt-3 flex gap-2">
+                    <input id="custom-poll-input" type="text" maxlength="20" placeholder="예: 방울토마토, 콩나물" class="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-[13px] focus:outline-none focus:border-[#4B7A3B]" />
+                    <button onclick="submitCustomPoll()" class="bg-[#4B7A3B] text-white text-[13px] font-bold px-4 py-2 rounded-xl shrink-0">
+                      보내기
+                    </button>
+                  </div>
+                ` : ''}
+              ` : `
+                <!-- 투표 결과 막대 -->
+                <div class="space-y-2.5 fade-in">
+                  ${[
+                    { label: '대파', pct: 42 },
+                    { label: '계란', pct: 35 },
+                    { label: '바나나', pct: 23 }
+                  ].map(row => {
+                    const isPicked = appState.pollChoice === row.label;
+                    return `
+                      <div>
+                        <div class="flex justify-between text-[13px] font-bold mb-1">
+                          <span class="${isPicked ? 'text-[#4B7A3B]' : 'text-[#222222]'}">
+                            ${row.label} ${isPicked ? '(내 선택)' : ''}
+                          </span>
+                          <span class="${isPicked ? 'text-[#4B7A3B]' : 'text-gray-600'}">${row.pct}%</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full ${isPicked ? 'bg-[#4B7A3B]' : 'bg-gray-300'}" style="width: ${row.pct}%"></div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+
+                  ${appState.customPollText ? `
+                    <p class="text-[12px] font-semibold text-[#4B7A3B] bg-[#EEF4EC] px-3 py-2 rounded-xl mt-2">
+                      ✏️ 직접 알려주신 의견: "${appState.customPollText}"
+                    </p>
+                  ` : ''}
+
+                  <p class="text-[11.5px] text-gray-500 pt-1">
+                    참여해 주셔서 고마워요. (시안 화면이라 결과는 예시예요)
+                  </p>
+                </div>
+              `}
+            </section>
+
+            <!-- ⑦ 이마트의 약속 -->
+            <section class="bg-[#EEF4EC]/70 border border-[#4B7A3B]/20 rounded-[16px] p-4 space-y-2.5">
+              <h2 class="text-[15px] font-extrabold text-[#4B7A3B]">이마트의 약속</h2>
+              <ul class="space-y-2 text-[13px] font-semibold text-[#222222]">
+                <li class="flex items-start gap-2">
+                  <span class="text-[#4B7A3B] font-extrabold">✓</span>
+                  <span>실제로 고친 상품만 알려드려요</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-[#4B7A3B] font-extrabold">✓</span>
+                  <span>어느 구간에서 문제가 생겼는지 솔직하게 보여드려요</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-[#4B7A3B] font-extrabold">✓</span>
+                  <span>매달 1회, 같은 날 발행해요</span>
+                </li>
+              </ul>
+            </section>
+
+          </main>
+
+          <!-- ⑧ 푸터 -->
+          ${renderFooter(false)}
+        </div>
+      `;
+    }
+
+    /**
+     * 10. 인터랙션 핸들러 (필터, 스크롤, 알림, 투표)
+     */
+    function setStageFilter(stage) {
+      appState.selectedStageFilter = stage;
+      renderApp();
+    }
+
+    function scrollToNextMonth() {
+      const el = document.getElementById('next-month-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function toggleAlertSubscribe() {
+      appState.alertSubscribed = !appState.alertSubscribed;
+      renderApp();
+      if (appState.alertSubscribed) {
+        showToast('12월호 발행 알림이 신청되었어요. (시안 안내)');
+      }
+    }
+
+    function submitPoll(choice) {
+      appState.pollChoice = choice;
+      renderApp();
+    }
+
+    function toggleCustomPollInput() {
+      appState.showCustomInput = !appState.showCustomInput;
+      renderApp();
+      if (appState.showCustomInput) {
+        setTimeout(() => {
+          const input = document.getElementById('custom-poll-input');
+          if (input) input.focus();
+        }, 50);
+      }
+    }
+
+    function submitCustomPoll() {
+      const input = document.getElementById('custom-poll-input');
+      const val = input ? input.value.trim() : '';
+      if (!val) {
+        showToast('원하시는 신선 상품을 입력해 주세요.');
+        return;
+      }
+      appState.customPollText = val;
+      appState.pollChoice = '직접입력';
+      renderApp();
+    }
+
+    /**
+     * 11. 메인 렌더링 엔진 & 브라우저 히스토리 리스너
+     */
+    function renderApp() {
+      const root = document.getElementById('app-root');
+      const route = getCurrentRoute();
+
+      if (route.view === 'detail') {
+        root.innerHTML = renderDetailView(route.itemId);
+      } else {
+        root.innerHTML = renderReportView();
+      }
+    }
+
+    window.addEventListener('hashchange', renderApp);
+    window.addEventListener('popstate', renderApp);
+    window.addEventListener('DOMContentLoaded', renderApp);
+  </script>
+</body>
+</html>
